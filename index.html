@@ -16,7 +16,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding: 140px clamp(8px, 4vw, 24px) 70px;
+            padding: 100px clamp(8px, 4vw, 24px) 70px;
             background: linear-gradient(160deg, #2d2d2d, #1b1b1b 60%, #111);
             color: white;
         }
@@ -42,7 +42,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            gap: clamp(26px, 6vh, 48px);
+            gap: clamp(16px, 6vh, 24px);
         }
         .subtle-title {
             font-size: clamp(12px, 4vw, 24px);
@@ -61,6 +61,7 @@
         h1 {
             font-size: clamp(24px, 9vw, 56px);
             margin: 0;
+            margin-bottom: 16px;
             font-weight: 600;
             letter-spacing: 1px;
             text-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
@@ -87,14 +88,26 @@
             background: rgba(255, 255, 255, 0.13);
             box-shadow: 0 20px 40px rgba(0,0,0,0.55);
         }
+        .job-card.placeholder {
+            opacity: 0.55;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed rgba(255,255,255,0.22);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+            filter: grayscale(0.7);
+        }
+        .job-card.placeholder:hover {
+            transform: scale(1.01);
+            background: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+        }
         .job-icon {
             font-size: clamp(36px, 6vw, 52px);
         }
         .job-info {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            text-align: center;
+            align-items: flex-start;
+            text-align: left;
         }
         .job-title {
             font-size: clamp(22px, 4.5vw, 32px);
@@ -167,6 +180,13 @@
             <div class="job-info">
                 <div class="job-title">Reinigungskraft</div>
                 <div class="job-salary">Monatliches Gehalt: 4'000.-</div>
+            </div>
+        </div>
+        <div class="job-card placeholder" onclick="location.href='newsletter.html'">
+            <div class="job-icon">📬</div>
+            <div class="job-info">
+                <div class="job-title">Abonnieren</div>
+                <div class="job-salary">Erfahre wenn mehr Berufe verfügbar sind</div>
             </div>
         </div>
         <div class="pea-wheel" id="peaWheel"></div>
