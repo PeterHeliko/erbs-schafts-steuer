@@ -847,6 +847,9 @@
                     calendar.isClean = true;
                     calendar.isDirty = false;
                     isCleaningInProgress = false;
+                    calendar.shineActive = true;
+                    calendar.shineProgress = 0;
+
                     
                     // Add 4 green peas
                     addFourGreenPeas();
@@ -956,7 +959,9 @@
                     isClean: false,
                     isDirty: true,
                     progress: 0, // Individual progress for this calendar
-                    scrubbingDistance: 0 // Individual scrubbing distance for this calendar
+                    scrubbingDistance: 0, // Individual scrubbing distance for this calendar
+                    shineActive: false,
+                    shineProgress: 0,
                 };
             } else {
                 calendars[monthIndex].x = x;
@@ -1126,7 +1131,46 @@
                 ctx.lineWidth = 2;
                 ctx.strokeRect(barX, barY, barWidth, barHeight);
             }
+
+            drawCalendarShine(calendar);
         }
+
+        function drawCalendarShine(calendar) {
+            if (!calendar.shineActive) return;
+
+            const { x, y, size } = calendar;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(x, y, size, size);
+            ctx.clip();
+
+            const stripeWidth = size * 0.2;
+            const px = x + calendar.shineProgress * (size + stripeWidth) - stripeWidth;
+
+            const grad = ctx.createLinearGradient(
+                px - stripeWidth, y,
+                px + stripeWidth, y + size
+            );
+
+            grad.addColorStop(0, "rgba(255,255,255,0)");
+            grad.addColorStop(0.5, "rgba(255,255,255,0.55)");
+            grad.addColorStop(1, "rgba(255,255,255,0)");
+
+
+
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, y, size, size);
+
+            calendar.shineProgress += 0.02;
+
+            if (calendar.shineProgress >= 1.5) {
+                calendar.shineActive = false;
+            }
+
+            ctx.restore();
+        }
+
 
         function draw() {
             ctx.fillStyle = '#2a2a2a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
