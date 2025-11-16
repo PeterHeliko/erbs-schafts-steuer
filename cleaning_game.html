@@ -272,8 +272,40 @@
         // reset filter so the main canvas isn’t blurred
         dctx.filter = 'none';
 
+        const DIRT_RENDER_SCALE = window.devicePixelRatio > 1.3 ? 0.6 : 0.75;
 
+        function ensureDirtLayer(calendar, size) {
+            if (!calendar.dirtCircles || size <= 0) return null;
+            if (calendar.dirtCanvas && calendar.dirtCanvasSize === size) {
+                return calendar.dirtCanvas;
+            }
+
+            const renderSize = Math.max(96, Math.round(size * DIRT_RENDER_SCALE));
+            const layer = document.createElement("canvas");
+            layer.width = renderSize;
+            layer.height = renderSize;
+            const layerCtx = layer.getContext("2d");
+
+            const scale = renderSize / size;
+            layerCtx.setTransform(scale, 0, 0, scale, 0, 0);
+            layerCtx.clearRect(0, 0, size, size);
+
+            for (const circle of calendar.dirtCircles) {
+                const r = circle.rRatio * size;
+                const cx = circle.cxRatio * size;
+                const cy = circle.cyRatio * size;
+                layerCtx.globalAlpha = circle.opacity;
+                layerCtx.drawImage(dirtTex, cx - r, cy - r, r * 2, r * 2);
+            }
+
+            layerCtx.globalAlpha = 1;
+            calendar.dirtCanvas = layer;
+            calendar.dirtCanvasSize = size;
+            return layer;
+        }
+ 
         function roundedRectPath(ctx, x, y, w, h, r) {
+
             ctx.beginPath();
             ctx.moveTo(x + r, y);
             ctx.lineTo(x + w - r, y);
@@ -1004,7 +1036,9 @@
                     scrubbingDistance: 0, // Individual scrubbing distance for this calendar
                     shineActive: false,
                     shineProgress: 0,
-                    dirtSpots: [],
+                    dirtCircles: null,
+                    dirtCanvas: null,
+                    dirtCanvasSize: 0,
                 };
             } else {
                 calendars[monthIndex].x = x;
@@ -1014,25 +1048,21 @@
             
             const calendar = calendars[monthIndex];
 
-            // Generate dirt spots once
+            // Generate dirt spots once (store normalized coordinates so we can rebuild fast)
             if (!calendar.dirtCircles) {
                 calendar.dirtCircles = [];
 
-                const circleCount = 80;
-                const minR = size * 0.02;
-                const maxR = size * 0.16;
+                const circleCount = Math.max(48, Math.round(40 + size * 0.045));
+                const minRatio = 0.02;
+                const maxRatio = 0.16;
 
                 for (let i = 0; i < circleCount; i++) {
+                    const rRatio = minRatio + Math.random() * (maxRatio - minRatio);
+                    const cxRatio = rRatio + Math.random() * (1 - 2 * rRatio);
+                    const cyRatio = rRatio + Math.random() * (1 - 2 * rRatio);
+                    const opacity = 0.25 + Math.random() * 0.55;
 
-                    const r = minR + Math.random() * (maxR - minR);
-
-                    const cx = x + r + Math.random() * (size - 2 * r);
-                    const cy = y + r + Math.random() * (size - 2 * r);
-
-                    const opacity = 0.2 + Math.random() * 0.6; 
-                    // → random between 0.2 and 0.8 (nice dirt range)
-
-                    calendar.dirtCircles.push({ x: cx, y: cy, r, opacity });
+                    calendar.dirtCircles.push({ cxRatio, cyRatio, rRatio, opacity });
                 }
             }
 
@@ -1160,24 +1190,13 @@
                 ctx.fillStyle = `rgba(139, 90, 43, ${0.8 * dirtOpacity})`; // Brown semi-transparent dirt
                 ctx.fillRect(x, y, size, size);
                 
-                // Add some dirt spots with reduced opacity
-                for (const c of calendar.dirtCircles) {
-                    const baseOpacity = c.opacity * dirtOpacity;
-
-                    ctx.globalAlpha = baseOpacity;
-
-                    const size = c.r * 2; // texture is drawn square
-                    ctx.drawImage(
-                        dirtTex,
-                        c.x - c.r,
-                        c.y - c.r,
-                        size,
-                        size
-                    );
+                const dirtLayer = ensureDirtLayer(calendar, size);
+                if (dirtLayer) {
+                    ctx.save();
+                    ctx.globalAlpha = dirtOpacity;
+                    ctx.drawImage(dirtLayer, x, y, size, size);
+                    ctx.restore();
                 }
-
-            ctx.globalAlpha = 1; // reset
-
             }
 
 
