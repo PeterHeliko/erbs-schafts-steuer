@@ -345,6 +345,7 @@
         let isCleaningInProgress = false;
         let cleaningStartTime = 0;
         const CLEANING_DURATION = 1000; // 1 second per month
+        const SHINE_SPEED = 4.2; // Progress per second for the shine sweep
         let yearlyPeasEarned = 0; // Track peas earned this year
         
         // Scrubbing motion detection
@@ -1117,7 +1118,7 @@
                 ctx.fillStyle = '#757575';
             } else  if (monthIndex > currentActiveMonth && !calendar.isClean){
                 // Not completed: red header
-                ctx.fillStyle = '#543A00';
+                ctx.fillStyle = '#ffffff';
             } else {
                 ctx.fillStyle = '#ffffff';
             }
@@ -1126,20 +1127,6 @@
             ctx.textBaseline = 'middle';
             ctx.fillText(monthName, x + size / 2, y + headerHeight / 2);
             
-            // Binding rings effect at top
-            const ringRadius = size * 0.04;
-            const ringY = y + size * 0.02;
-            if (calendar.isClean) {
-                ctx.fillStyle = '#1a1a1a';
-            } else {
-                ctx.fillStyle = '#4a4a4a';
-            }
-            for (let i = 0; i < 2; i++) {
-                const ringX = x + size * (0.3 + i * 0.4);
-                ctx.beginPath();
-                ctx.arc(ringX, ringY, ringRadius, 0, Math.PI * 2);
-                ctx.fill();
-            }
             
             // Calendar body (only show day numbers if not completed)
             if (!calendar.isClean) {
@@ -1285,7 +1272,7 @@
             ctx.fillStyle = grad;
             ctx.fillRect(x, y, size, size);
 
-            calendar.shineProgress += 0.02;
+            calendar.shineProgress += SHINE_SPEED * frameDeltaSeconds;
 
             if (calendar.shineProgress >= 1.5) {
                 calendar.shineActive = false;
@@ -1608,25 +1595,29 @@
         let lastFrameTime = performance.now();
         const targetFPS = 30;
         const frameInterval = 1000 / targetFPS;
+        let lastDrawTime = lastFrameTime;
+        let frameDeltaSeconds = frameInterval / 1000;
         
-
         function animate() { 
             const currentTime = performance.now();
             const deltaTime = currentTime - lastFrameTime;
+            const shouldTick = !animationComplete && deltaTime >= frameInterval;
+            const needsPassiveDraw = erbsenNotification || isCleaningInProgress || showTutorial;
             
-            // Always animate if notification is active, cleaning in progress, tutorial showing, or animation is running
-            if (!animationComplete && deltaTime >= frameInterval) {
+            if (shouldTick) {
                 lastFrameTime = currentTime - (deltaTime % frameInterval);
-                update(); 
-                draw();
-            } else if (erbsenNotification || isCleaningInProgress || showTutorial) {
-                // Just redraw for notification, cleaning, or tutorial animation when paused
-                update(); // Still need to update cleaning progress
+            }
+            
+            if (shouldTick || needsPassiveDraw) {
+                frameDeltaSeconds = Math.min(0.1, (currentTime - lastDrawTime) / 1000);
+                lastDrawTime = currentTime;
+                update();
                 draw();
             }
             
             requestAnimationFrame(animate); 
         }
+
         
         function showTaxPopup() {
             const overlay = document.getElementById('tax-overlay');
