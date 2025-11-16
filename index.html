@@ -61,8 +61,8 @@
         h1 {
             font-size: clamp(24px, 9vw, 56px);
             margin: 0;
-            margin-top: 0.3em;
-            margin-bottom: 16px;
+            margin-top: 0.5em;
+            margin-bottom: 0.005em;
             font-weight: 600;
             letter-spacing: 1px;
             text-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
@@ -70,7 +70,7 @@
         }
         .job-card {
             width: clamp(240px, 50vw, 360px);
-            padding: clamp(18px, 3vw, 26px) clamp(12px, 4vw, 18px);
+            padding: clamp(12px, 3vw, 18px) clamp(12px, 4vw, 18px);
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(12px);
             border-radius: 16px;
@@ -123,7 +123,7 @@
             position: relative;
             width: clamp(160px, 55vw, 360px);
             height: clamp(160px, 55vw, 360px);
-            margin-top: clamp(18px, 2vh, 20px);
+            margin-top: clamp(8px, 2vh, 14px);
             margin-bottom: clamp(20x, 7vh, 24px);
             transform-origin: 50% 50%;
             animation: wheelSteer 7s ease-in-out infinite;
@@ -185,7 +185,7 @@ const peaColors = ["#4CAF50", "#66BB6A", "#8BC34A", "#9CCC65", "#7CB342", "#558B
 function generatePeaWheel() {
     if (!wheel) return;
     wheel.innerHTML = "";
-    const BASE_SIZE = 260;
+    const BASE_SIZE = 300;
     const wheelSize = Math.max(120, wheel.offsetWidth || BASE_SIZE);
     const peaSize = Math.min(12, Math.max(6, 12 * (wheelSize / 320)));
     const half = peaSize / 2;
