@@ -1318,7 +1318,13 @@
             ctx.fill();
             
             // Draw sponge (🧽 emoji) - LAST so it's on top of everything
-            const spongeSize = 60;
+            // Base calendar size of the current active month
+            const cal = calendars[currentActiveMonth];
+            const calendarSize = cal ? cal.size : 80;
+
+            // Sponge = about 35% of the calendar width
+            const spongeSize = calendarSize * 0.35;
+            
             ctx.font = `${spongeSize}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
