@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hintergrundinfos</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 100px clamp(8px, 4vw, 24px) 70px;
+            background: linear-gradient(160deg, #2d2d2d, #1b1b1b 60%, #111);
+            color: white;
+        }
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 18px 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+        .subtle-title {
+            font-size: clamp(12px, 4vw, 24px);
+            opacity: 0.65;
+            margin: 0;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+        }
+        .content {
+            width: 100%;
+            max-width: min(620px, 92vw);
+            padding: 0 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 36px;
+        }
+        h1, h2 {
+            margin: 0;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 36px;
+            text-align: center;
+        }
+        p {
+            line-height: 1.45;
+            opacity: 0.9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            background: rgba(255,255,255,0.06);
+        }
+        th, td {
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: rgba(255,255,255,0.12);
+            font-weight: 600;
+        }
+        .back-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.12);
+            color: white;          
+            margin-top: 20px;
+            transition: 0.25s ease;
+        }
+        .back-btn:hover {
+            transform: scale(1.03);
+            background: rgba(255,255,255,0.18);
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="subtle-title">Erbs-Schafts-Steuer-Simulator</div>
+    </div>
+
+    <main class="content">
+        <h1>Hintergrundinformationen</h1>
+
+        <section>
+            <h2>Lohnbasis</h2>
+            <p>
+                Die im Spiel verwendeten Löhne beruhen auf offiziellen Statistiken des Bundesamts für Statistik (BFS). Grundlage bildet der Datensatz 
+                "Monatlicher Bruttolohn nach Grossregion, Berufsgruppe, Alter und Geschlecht" von 2022. Die folgenden Medianlöhne wurden geschlechter- und altersübergreifend ermittelt und auf die nächsten 1'000 CHF gerundet:
+            </p>
+
+            <table>
+                <tr><th>Berufsgruppe</th><th>Medianlohn (gerundet)</th></tr>
+                <tr><td>Reinigungspersonal & Hilfskräfte</td><td>4'356 CHF</td></tr>
+                <tr><td>Bürokräfte & verwandte Berufe</td><td>6'204 CHF</td></tr>
+                <tr><td>Lehrkräfte</td><td>9'375 CHF</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>Steuerberechnung</h2>
+            <p>
+                Die Einkommenssteuerwerte wurden über den Steuerkalkulator des Kanton Luzerns (Gemeinde: Stadt Luzern) berechnet. Sie beinhalten Gemeinde-, Kantons-, Bundes- sowie römisch-katholische Kirchensteuer. Da alle Löhne bereits gerundet sind, wurden keine zusätzlichen Abzüge berücksichtigt. Die resultierenden Steuerbeträge wurden wiederum auf die nächsten 1'000 CHF gerundet.
+            </p>
+        </section>
+
+        <section>
+            <h2>Ziel des Spiels</h2>
+            <p>
+                Das Spiel soll die grossen Unterschiede zwischen normalem Erwerbseinkommen und Einkommen durch Erbschaften sichtbar machen – insbesondere, dass selbst unter der vorgeschlagenen Erbschaftssteuer-Initiative vom 30. November 2025 Erbschaften weiterhin steuerfrei bleiben würden. Damit wird hervorgehoben, dass in vielen Kantonen bereits relativ geringe Erwerbseinkommen merklich besteuert werden, während nicht erarbeitete Erbschaften vollständig steuerbefreit bleiben.
+            </p>
+        </section>
+
+        <div style="text-align:center;"><a href="index.html"><button class="back-btn">Zurück</button></a></div>
+    </main>
+</body>
+</html>
