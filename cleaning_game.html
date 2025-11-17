@@ -291,8 +291,8 @@
 
     <div id="gameover-overlay"></div>
     <div id="gameover-popup">
-        <h2>Zahlungsverzug</h2>
-        <p id="gameover-text">Leider konnten wir keinen Zahlungseingang für die Rechnung Nr. 3R8S3 feststellen.</p>
+        <h2>👾 Monster-Alarm</h2>
+        <p id="gameover-text">Das Monster hat dich erwischt. Versuche es noch einmal!</p>
         <button id="gameover-button">Hauptmenü</button>
     </div>
     
@@ -310,7 +310,10 @@
         const gameOverText = document.getElementById('gameover-text');
         const gameOverButton = document.getElementById('gameover-button');
         const SCRUB_DISTANCE_FACTOR = 0.8; // Portion of viewport needed to clean a calendar
+        const TOP_BAR_HEIGHT = 42;
         let distancePerProgress = 600;
+        let menuButtonBounds = { x: 0, y: 0, width: 0, height: 0 };
+        let menuButtonHover = false;
 
         // Create a blurred dirt texture (offscreen)
         const dirtTextureSize = 64; // you can adjust
@@ -386,7 +389,13 @@
             ctx.closePath();
         }
 
+        function isPointInMenuButton(x, y) {
+            const b = menuButtonBounds;
+            return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
+        }
+ 
         function randomBetween(min, max) {
+
             return min + Math.random() * (max - min);
         }
 
@@ -579,11 +588,6 @@
                 return;
             }
 
-            if (calendar.isClean) {
-                startMonsterVanish('defeated');
-                return;
-            }
-
             if (monster.waitForScrub && !monster.startedMoving) {
                 monster.idleTime += frameDeltaSeconds;
                 if (isCleaningInProgress) {
@@ -631,7 +635,7 @@
             if (gameOverText) {
                 const calendar = monster && calendars[monster.targetMonth];
                 const monthName = calendar?.monthName || 'diesen Monat';
-                gameOverText.textContent = `Leider konnten wir keinen Zahlungseingang für die Rechnung Nr. 3R8S3 feststellen.`;
+                gameOverText.textContent = `Das Monster hat ${monthName} erwischt. Versuche es erneut!`;
             }
         }
 
@@ -698,8 +702,8 @@
         let yearlyPeasEarned = 0; // Track peas earned this year
         
         const MONSTER_START_YEAR = 2;
-        const MONSTER_BASE_SPEED = 0.6;
-        const MONSTER_SPEED_INCREMENT = 0.0075;
+        const MONSTER_BASE_SPEED = 0.55;
+        const MONSTER_SPEED_INCREMENT = 0.0055;
         const MONSTER_VANISH_DURATION = 0.3;
         const MONSTER_SIZE_RATIO = 0.25;
         const MONSTER_SPAWN_PAIRS = {
@@ -710,13 +714,15 @@
             6: 8, 8: 6,
             9: 11, 11: 9
         };
+        const HERITAGE_PROBABILITY_BASE = 1.4677;
         let monster = null;
         let monsterGhosts = [];
         let monsterSuppressed = false;
         let gameOver = false;
-
-        
+ 
+         
         // Scrubbing motion detection
+
         let lastSpongeX = 0;
         let lastSpongeY = 0;
         let scrubbingDistance = 0;
@@ -1707,21 +1713,42 @@
             
             // Draw top bar background
             ctx.fillStyle = 'rgba(30, 30, 30, 0.7)';
-            ctx.fillRect(0, 0, canvas.width, 42);
+            ctx.fillRect(0, 0, canvas.width, TOP_BAR_HEIGHT);
             
             // Draw top bar text
             ctx.font = 'bold 18px Arial, sans-serif';
             ctx.textBaseline = 'middle';
             
-            // Year display (left)
+            // Menu icon (left)
+            const iconFontSize = 26;
+            const iconPadding = 14;
+            const iconCenterY = TOP_BAR_HEIGHT / 2;
+            const iconX = 20;
+            const boundsSize = iconFontSize + iconPadding;
+            menuButtonBounds = {
+                x: iconX - iconPadding * 0.4,
+                y: iconCenterY - boundsSize / 2,
+                width: boundsSize,
+                height: boundsSize
+            };
+            ctx.save();
+            ctx.fillStyle = menuButtonHover ? '#A7E059' : '#7CB342';
+            ctx.font = `bold ${iconFontSize}px Arial, sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('<', iconX, iconCenterY);
+            ctx.restore();
+            
+            // Year display (center)
+            ctx.font = 'bold 18px Arial, sans-serif';
             ctx.fillStyle = '#7CB342';
             ctx.textAlign = 'center';
-            ctx.fillText('Jahr ' + currentYear, canvas.width / 2, 21);
+            ctx.fillText('Jahr ' + currentYear, canvas.width / 2, TOP_BAR_HEIGHT / 2);
             
             // Draw calendars between top bar and Erbsen-Bank
             const greenArea = getGreenPeaArea();
             const bgStartY = greenArea.bgStartRow * GRID_CELL_SIZE;
-            drawCalendars(42, bgStartY - 20); // Start after top bar, end before Erbsen-Bank
+            drawCalendars(TOP_BAR_HEIGHT, bgStartY - 20); // Start after top bar, end before Erbsen-Bank
             ensureMonsterPresence();
             drawMonsters();
             
@@ -1899,7 +1926,7 @@
             const calendarSize = cal ? cal.size : 80;
 
             // Sponge = about 35% of the calendar width
-            const spongeSize = calendarSize * 0.35;
+            const spongeSize = calendarSize * 0.45;
             
             ctx.font = `${spongeSize}px Arial`;
             ctx.textAlign = 'center';
@@ -2385,8 +2412,12 @@
         }
         
         canvas.addEventListener('mousedown', (e) => {
-            if (gameOver) return;
             const pos = getMousePos(e);
+            if (isPointInMenuButton(pos.x, pos.y)) {
+                window.location.href = 'index.html';
+                return;
+            }
+            if (gameOver) return;
             
             // Dismiss tutorial on any click
             dismissTutorial();
@@ -2407,11 +2438,18 @@
         });
         
         canvas.addEventListener('mousemove', (e) => {
+            const pos = getMousePos(e);
+            const overMenuButton = isPointInMenuButton(pos.x, pos.y);
+            const previousHover = menuButtonHover;
+            menuButtonHover = overMenuButton && !sponge.isDragging && !gameOver;
+            if (previousHover !== menuButtonHover) {
+                draw();
+            }
+
             if (gameOver) {
-                canvas.style.cursor = 'default';
+                canvas.style.cursor = overMenuButton ? 'pointer' : 'default';
                 return;
             }
-            const pos = getMousePos(e);
             
             if (sponge.isDragging) {
                 const newX = pos.x - sponge.offsetX;
@@ -2451,6 +2489,10 @@
                 
                 draw();
             } else {
+                if (overMenuButton) {
+                    canvas.style.cursor = 'pointer';
+                    return;
+                }
                 // Change cursor if hovering over sponge
                 if (isSpongeClicked(pos.x, pos.y)) {
                     canvas.style.cursor = 'grab';
@@ -2476,6 +2518,11 @@
         });
         
         canvas.addEventListener('mouseleave', () => {
+            const hadHover = menuButtonHover;
+            menuButtonHover = false;
+            if (hadHover) {
+                draw();
+            }
             if (gameOver) return;
             if (sponge.isDragging) {
                 sponge.isDragging = false;
@@ -2499,8 +2546,12 @@
         }
         
 canvas.addEventListener('touchstart', (e) => {
-    if (gameOver) return;
     const pos = getTouchPos(e);
+    if (isPointInMenuButton(pos.x, pos.y)) {
+        window.location.href = 'index.html';
+        return;
+    }
+    if (gameOver) return;
     dismissTutorial();
 
     if (isSpongeClicked(pos.x, pos.y)) {
