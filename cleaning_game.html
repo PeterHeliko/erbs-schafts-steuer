@@ -1421,10 +1421,13 @@
                     
                     // Check if all 12 calendars are cleaned (regular tax event)
                     if (currentActiveMonth >= 12) {
-                        // All calendars cleaned! Show tax popup
-                        setTimeout(() => {
-                            showTaxPopup();
-                        }, 500);
+                        if (currentYear === 1) {
+                            setTimeout(() => {
+                                showTaxPopup();
+                            }, 500);
+                        } else if (!heritageEventTriggered) {
+                            triggerHeritageEvent('year-two-complete');
+                        }
                     }
                 }
             }
@@ -2169,6 +2172,7 @@
         }
 
         function showTaxPopup() {
+            if (currentYear !== 1) return;
             const overlay = document.getElementById('tax-overlay');
             const popup = document.getElementById('tax-popup');
             const text = document.getElementById('tax-popup-text');
@@ -2281,6 +2285,15 @@
             if (currentActiveMonth > 12) {
                 currentActiveMonth = 12;
             }
+            moveSpongeToActiveMonthCenter();
+        }
+
+        function moveSpongeToActiveMonthCenter() {
+            if (currentActiveMonth >= 12) return;
+            const calendar = calendars[currentActiveMonth];
+            if (!calendar) return;
+            sponge.x = calendar.x + calendar.size / 2;
+            sponge.y = calendar.y + calendar.size / 2;
         }
 
         function maybeTriggerForcedHeritageAfterCleaning(monthIndex, year) {
@@ -2313,8 +2326,9 @@
             tutorialShown = true;
             syncTutorialOverlay();
             hideAchievementAlert();
+            moveSpongeToActiveMonthCenter();
             ensureMonsterPresence();
-            if (yearCompleted && taxPopupStep === 0) {
+            if (yearCompleted && taxPopupStep === 0 && currentYear === 1) {
                 setTimeout(() => {
                     if (taxPopupStep === 0) {
                         showTaxPopup();
@@ -2431,6 +2445,10 @@
         }
         
         function resetCalendarsForNewYear() {
+            if (currentYear >= 2) {
+                currentYear = 2;
+                return;
+            }
             // Reset all calendars to dirty state and clear their progress
             calendars.forEach(calendar => {
                 calendar.isClean = false;
