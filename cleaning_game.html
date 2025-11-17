@@ -816,6 +816,8 @@
         let forcedHeritagePlan = null;
         let monsterCatchOccurred = false;
         let monsterDelayedAfterCatch = false;
+        let spongeWiggleAfterCatch = false;
+        let spongeWiggleStartTime = 0;
  
          
         // Scrubbing motion detection
@@ -2028,9 +2030,11 @@
             // Tutorial animation - wiggle sponge if tutorial is showing
             let spongeDisplayX = sponge.x;
             let spongeDisplayY = sponge.y;
-            if (showTutorial && calendars[0] && !sponge.isDragging) {
+            const shouldWiggle = (showTutorial || spongeWiggleAfterCatch) && !sponge.isDragging;
+            if (shouldWiggle && calendars[currentActiveMonth]) {
                 // Animate sponge wiggling left-right
-                const elapsed = performance.now() - tutorialStartTime;
+                const baseTime = spongeWiggleAfterCatch ? spongeWiggleStartTime : tutorialStartTime;
+                const elapsed = performance.now() - baseTime;
                 const animDuration = 800; // 0.8 second cycle
                 const cycle = (elapsed % animDuration) / animDuration;
                 
@@ -2183,7 +2187,7 @@
             
             // First message - show yearly peas earned (not money)
             title.textContent = '🏛️ Steueramt';
-            text.textContent = `Wir sehen, sie haben dieses Jahr ${yearlyPeasEarned} Erbsen verdient. Dafür haben sie sicher hart gearbeitet?`;
+            text.textContent = `Wir sehen, Sie haben dieses Jahr ${yearlyPeasEarned} Erbsen verdient. Dafür haben Sie sicher hart gearbeitet?`;
             button.textContent = 'Ja';
             
             overlay.classList.add('visible');
@@ -2223,7 +2227,7 @@
             taxPopupStep = 200; // Special code for post-cascade tax event
             
             title.textContent = '🏛️ Steueramt';
-            text.textContent = "Wir sehen, sie haben auf einen Schlag 50'000 Erbsen verdient. Dafür haben sie sicher hart gearbeitet?";
+            text.textContent = "Wir sehen, Sie haben auf einen Schlag 50'000 Erbsen verdient. Dafür haben Sie sicher hart gearbeitet?";
             button.textContent = 'Nein';
             button.classList.add('no-button');
             
@@ -2319,6 +2323,8 @@
             const upcomingMonth = getUpcomingMonthReference();
             gameOver = false;
             monsterDelayedAfterCatch = true;
+            spongeWiggleAfterCatch = true;
+            spongeWiggleStartTime = performance.now();
             scheduleForcedHeritagePlan(upcomingMonth.monthIndex, upcomingMonth.year);
             isCleaningInProgress = false;
             sponge.isDragging = false;
@@ -2445,6 +2451,8 @@
         }
         
         function resetCalendarsForNewYear() {
+            spongeWiggleAfterCatch = false;
+            spongeWiggleStartTime = 0;
             if (currentYear >= 2) {
                 currentYear = 2;
                 return;
@@ -2566,6 +2574,8 @@
             forcedHeritagePlan = null;
             monsterCatchOccurred = false;
             monsterDelayedAfterCatch = false;
+            spongeWiggleAfterCatch = false;
+            spongeWiggleStartTime = 0;
             
             // Hide restart button
             document.getElementById('restart-btn').style.display = 'none';
@@ -2648,6 +2658,7 @@
             
             if (isSpongeClicked(pos.x, pos.y)) {
                 dismissTutorial();
+                spongeWiggleAfterCatch = false;
                 sponge.isDragging = true;
                 sponge.offsetX = pos.x - sponge.x;
                 sponge.offsetY = pos.y - sponge.y;
@@ -2780,6 +2791,7 @@ canvas.addEventListener('touchstart', (e) => {
 
     if (isSpongeClicked(pos.x, pos.y)) {
         dismissTutorial();
+        spongeWiggleAfterCatch = false;
         e.preventDefault();
         sponge.isDragging = true;
         sponge.offsetX = pos.x - sponge.x;
