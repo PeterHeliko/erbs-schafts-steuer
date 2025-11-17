@@ -149,12 +149,22 @@
             </div>
 
             <div class="flex flex-col">
-                <label for="contact_data_future_interest">
-                <input name="contact[data][future_interest]" type="hidden" value="false"/>
-                <input id="contact_data_future_interest" name="contact[data][future_interest]" style="mr-4" type="checkbox" value="true"/>
-                Ich möchte über zukünftige Projekte informiert werden. (optional)
-                </label>
-            </div>
+    
+            <!-- Hidden fallback value OUTSIDE the label -->
+            <input name="contact[data][future_interest]" type="hidden" value="false"/>
+
+            <!-- Flex wrapper for checkbox + label text -->
+            <label for="contact_data_future_interest" style="display:flex; align-items:flex-start; gap:0.75rem; cursor:pointer;">
+                <input 
+                    id="contact_data_future_interest"
+                    name="contact[data][future_interest]"
+                    type="checkbox"
+                    value="true"
+                    style="margin-top: 3px;"
+                />
+                <span>Ich möchte über zukünftige Projekte informiert werden. (optional)</span>
+            </label>
+        </div>
 
             <input aria-hidden="true" autocomplete="off" name="h[url]" novalidate style="display: none;" />
 
