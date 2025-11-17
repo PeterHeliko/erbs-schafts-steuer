@@ -793,11 +793,11 @@
         let isCleaningInProgress = false;
         let cleaningStartTime = 0;
         const CLEANING_DURATION = 1000; // 1 second per month
-        const SHINE_SPEED = 3.2; // Progress per second for the shine sweep
+        const SHINE_SPEED = 2.8; // Progress per second for the shine sweep
         let yearlyPeasEarned = 0; // Track peas earned this year
         
         const MONSTER_START_YEAR = 2;
-        const MONSTER_BASE_SPEED = 0.3;
+        const MONSTER_BASE_SPEED = 0.33;
         const MONSTER_SPEED_INCREMENT = 0.1;
         const MONSTER_VANISH_DURATION = 0.3;
         const MONSTER_SIZE_RATIO = 0.25;
@@ -1558,7 +1558,7 @@
                 const p = calendar.pop; 
 
                 // Ease curve (0→1→0)
-                const scale = 1 + Math.sin(p * Math.PI) * 0.04;  
+                const scale = 1 + Math.sin(p * Math.PI) * 0.06;  
                 // 0.18 = 18% bigger at the peak
 
                 const cx = x + size / 2;
