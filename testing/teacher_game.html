@@ -557,7 +557,7 @@
             { keys: ['b/4'], duration: 'q', accidentals: [{ index: 0, type: 'b' }] },
             { keys: ['e/4'], duration: 'q' }
         ];
- 
+
         let currentYear = 1;
 
         let currentMonthIndex = 0;
@@ -809,11 +809,11 @@
                     ? `<div class="question-body">
                             ${questionContentHTML}
                             <p class="question-answer">${question.answer}</p>
-                    </div>
-                    <div class="question-actions">
+                        </div>
+                        <div class="question-actions">
                             <button class="decision-btn correct" data-choice="correct">Richtig</button>
                             <button class="decision-btn incorrect" data-choice="incorrect">Falsch</button>
-                    </div>`
+                        </div>`
                     : '';
                 card.innerHTML = header + body;
                 if (state === 'active') {
@@ -828,15 +828,15 @@
                     }
                 }
                 // List of handwriting fonts
-                    const handwritingFonts = [
-                        "'Patrick Hand'",
-                        "'Caveat'",
-                        "'Gloria Hallelujah'",
-                        "'Shadows Into Light'",
-                        "'Indie Flower'",
-                        "'Reenie Beanie'",
-                        "'Just Another Hand'"
-                    ];
+                const handwritingFonts = [
+                    "'Patrick Hand'", 
+                    "'Caveat'", 
+                    "'Gloria Hallelujah'", 
+                    "'Shadows Into Light'",
+                    "'Indie Flower'",
+                    "'Reenie Beanie'",
+                    "'Just Another Hand'"
+                ];
 
                 // Apply random font to the answer text
                 if (state === 'active') {
@@ -1447,7 +1447,7 @@
         function checkCascadeCompletion() {
             if (animationComplete) {
                 if (!heritageEventTriggered) {
-                setQuestionBoardCascadeState(false);
+                    setQuestionBoardCascadeState(false);
                 }
                 document.body.style.overflow = 'hidden';
                 setTimeout(() => {
