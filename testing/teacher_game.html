@@ -53,20 +53,64 @@
             display: none;
         }
         #question-board {
-            position: absolute;
-            top: clamp(50px, 5vh, 80px);
+            position: fixed;
+            top: clamp(50px, 6vh, 92px);
+            bottom: clamp(160px, 19vh, 240px);
             left: 50%;
             transform: translateX(-50%);
             width: calc(100% - 28px);
             max-width: 760px;
-            z-index: 80;
+            z-index: 60;
             pointer-events: none;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-start;
+            padding: 4px 0;
+            transition: opacity 0.35s ease;
+        }
+        #question-board::before,
+        #question-board::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 2;
+        }
+        #question-board::before {
+            top: 0;
+            height: 42px;
+            background: linear-gradient(180deg, rgba(42,42,42,0.9), rgba(42,42,42,0));
+        }
+        #question-board::after {
+            bottom: 0;
+            height: 80px;
+            background: linear-gradient(0deg, rgba(42,42,42,0.92), rgba(42,42,42,0));
+        }
+        #question-board.question-board--overflow::before,
+        #question-board.question-board--overflow::after {
+            opacity: 1;
+        }
+        #question-board.question-board--cascade {
+            opacity: 0;
         }
         #question-list {
             pointer-events: auto;
             display: flex;
             flex-direction: column;
             gap: 3px;
+            max-height: 100%;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-right: 4px;
+            width: 100%;
+            flex: 1 1 auto;
+        }
+        #question-list::-webkit-scrollbar {
+            display: none;
         }
         .question-card {
             background: rgba(18, 18, 18, 0.92);
@@ -430,6 +474,7 @@
         const taxPopupText = document.getElementById('tax-popup-text');
         const taxPopupButton = document.getElementById('tax-popup-button');
         const taxPopupTitle = document.getElementById('tax-popup-title');
+        const questionBoard = document.getElementById('question-board');
         const questionList = document.getElementById('question-list');
  
         const TOP_BAR_HEIGHT = 42;
@@ -733,6 +778,7 @@
 
                 questionList.appendChild(card);
             });
+            syncQuestionBoardWindow();
         }
  
         function handleQuestionDecision(questionIndex, decision) {
@@ -743,6 +789,31 @@
             question.state = 'done';
             renderQuestions();
             handleMonthCompletion();
+        }
+
+        function syncQuestionBoardWindow() {
+            if (!questionBoard || !questionList) return;
+            requestAnimationFrame(() => {
+                const containerHeight = questionBoard.clientHeight;
+                if (!containerHeight) return;
+                const contentHeight = questionList.scrollHeight;
+                const overflowActive = contentHeight > containerHeight;
+                if (overflowActive) {
+                    questionBoard.classList.add('question-board--overflow');
+                    const activeCard = questionList.querySelector('.question-card.state-active');
+                    const activeBottom = activeCard ? activeCard.offsetTop + activeCard.offsetHeight : contentHeight;
+                    const targetScroll = Math.max(0, activeBottom - containerHeight + 12);
+                    questionList.scrollTop = targetScroll;
+                } else {
+                    questionBoard.classList.remove('question-board--overflow');
+                    questionList.scrollTop = 0;
+                }
+            });
+        }
+
+        function setQuestionBoardCascadeState(active) {
+            if (!questionBoard) return;
+            questionBoard.classList.toggle('question-board--cascade', Boolean(active));
         }
  
         function activateGreenPea(greenPea) {
@@ -1126,6 +1197,7 @@
                 currentMoney += 50000000;
                 manualMode = false;
                 animationPaused = false;
+                setQuestionBoardCascadeState(true);
                 setTimeout(() => {
                     checkCascadeCompletion();
                 }, 100);
@@ -1156,6 +1228,7 @@
 
         function checkCascadeCompletion() {
             if (animationComplete) {
+                setQuestionBoardCascadeState(false);
                 document.body.style.overflow = 'hidden';
                 setTimeout(() => {
                     showPostCascadeTaxPopup();
@@ -1490,6 +1563,7 @@
                 gridCols = calcGridCols();
                 gridRows = calcGridRows();
             }
+            syncQuestionBoardWindow();
             draw();
         });
 
