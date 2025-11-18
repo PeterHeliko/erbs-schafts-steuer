@@ -557,7 +557,7 @@
             };
         }
 
-        function addFourGreenPeas() {
+        function addMonthlyGreenPeas() {
             const greenArea = getGreenPeaArea();
             const lowerQuarterStartRow = greenArea.startRow;
             const maxRow = greenArea.endRow;
@@ -566,7 +566,7 @@
             const endCol = gridCols - marginCols;
             const availableCols = Math.max(1, endCol - startCol);
 
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 9; i++) {
                 const currentIndex = greenPeaPlacementIndex + i;
                 setTimeout(() => {
                     const colOffset = currentIndex % availableCols;
@@ -605,9 +605,9 @@
                 }, i * 25);
             }
 
-            greenPeaPlacementIndex += 4;
+            greenPeaPlacementIndex += 9;
             erbsenNotification = {
-                text: '+4 Erbsen',
+                text: '+9 Erbsen',
                 opacity: 1,
                 offsetY: 0,
                 startTime: performance.now(),
@@ -979,8 +979,8 @@
             if (monthlyCompletionsLocked || heritageEventTriggered) return;
             if (currentMonthIndex >= 12) return;
             dismissTutorial();
-            addFourGreenPeas();
-            yearlyPeasEarned += 4;
+            addMonthlyGreenPeas();
+            yearlyPeasEarned += 9;
             currentMonthIndex++;
             updateMonthLabel();
             updateQuestionStates();
@@ -1067,7 +1067,7 @@
                 return a.col - b.col;
             });
 
-            const peasToRemove = greenPeas.slice(0, Math.min(5, greenPeas.length));
+            const peasToRemove = greenPeas.slice(0, Math.min(18, greenPeas.length));
             const actualRemoveCount = peasToRemove.length;
 
             peasToRemove.forEach(pea => {
@@ -1142,7 +1142,7 @@
                 updateScrollIndicator();
             } else if (taxPopupStep === 1) {
                 taxPopupStep = 2;
-                taxPopupText.innerHTML = 'Gerne verrechnen wir ihnen <b>5 Erbsen Einkommenssteuer.</b> Sie werden direkt von ihrem Konto abgebucht.';
+                taxPopupText.innerHTML = 'Gerne verrechnen wir ihnen <b>18 Erbsen Einkommenssteuer (18\'000.-).</b> Sie werden direkt von ihrem Konto abgebucht.';
                 taxPopupButton.textContent = 'OK';
             } else if (taxPopupStep === 2) {
                 taxOverlay.classList.remove('visible');
