@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Game - Erbs-Schafts-Spiel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@400;600&family=Gloria+Hallelujah&family=Shadows+Into+Light&family=Indie+Flower&family=Reenie+Beanie&family=Just+Another+Hand&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -48,13 +49,170 @@
             margin-bottom: 6px;
             font-size: 13px;
         }
+        #complete-month-btn {
+            display: none;
+        }
+        #question-board {
+            position: absolute;
+            top: clamp(50px, 5vh, 80px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 28px);
+            max-width: 760px;
+            z-index: 80;
+            pointer-events: none;
+        }
+        #question-list {
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .question-card {
+            background: rgba(18, 18, 18, 0.92);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 12px 16px;
+            color: #000000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+        }
+        .question-card.state-future,
+        .question-card.state-done {
+            padding: 6px 14px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .question-card.state-future {
+            background: rgba(50, 50, 50, 0.8);
+        }
+        .question-card.state-done {
+            background: rgba(35, 35, 35, 0.85);
+            color: #bdbdbd;
+        }
+        .question-card.state-active {
+            padding: 12px 18px;
+            background: radial-gradient(circle at top, rgba(60, 60, 60, 0.35), rgba(10, 10, 10, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .question-card.done-correct {
+            border-color: #4CAF50;
+        }
+        .question-card.done-incorrect {
+            border-color: #e53935;
+        }
+        .question-head {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .question-month {
+            margin-right: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            color: #9ccc65;
+            min-width: 70px;
+        }
+        .question-card.state-done .question-month {
+            color: #9e9e9e;
+        }
+        .question-subject {
+            margin-left: auto;
+            flex: 1;
+            text-align: right;
+            font-weight: 600;
+            font-size: 13px;
+            color: #fff;
+            margin-left: auto;
+        }
+        .question-card.state-done .question-subject {
+            color: #c7c7c7;
+        }
+        .question-icon {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #1a1a1a;
+            background: transparent;
+        }
+        .question-icon.correct {
+            background: rgba(76, 175, 80, 0.25);
+            color: #4CAF50;
+        }
+        .question-icon.incorrect {
+            background: rgba(229, 57, 53, 0.25);
+            color: #ef5350;
+        }
+        .question-body {
+            margin-top: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            background: rgba(255, 240, 200, 0.8);
+            line-height: 1.45;
+            font-size: 14px;
+        }
+        .question-body p {
+            margin: 0 0 8px 0;
+        }
+        .question-body p:last-child {
+            margin-bottom: 0;
+        }
+        .question-answer {
+            font-family: 'Patrick Hand', cursive;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+        }
+
+        .question-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+        }
+        .decision-btn {
+            flex: 1;
+            font-weight: bold;
+        }
+        .decision-btn.correct {
+            background: #2e7d32;
+        }
+        .decision-btn.correct:hover:not(:disabled) {
+            background: #205723;
+        }
+        .decision-btn.incorrect {
+            background: #c62828;
+        }
+        .decision-btn.incorrect:hover:not(:disabled) {
+            background: #8e0000;
+        }
+        .question-card.state-future .question-body,
+        .question-card.state-future .question-actions,
+        .question-card.state-done .question-body,
+        .question-card.state-done .question-actions {
+            display: none;
+        }
+        .question-card.compact {
+            font-size: 13px;
+        }
         button {
             background: #4CAF50;
             color: white;
             border: none;
             padding: 6px 12px;
             cursor: pointer;
-            border-radius: 3px;
+            border-radius: 8px;
             font-size: 12px;
             margin: 2px 0;
         }
@@ -231,8 +389,13 @@
         <div id="month-label">Monat: Januar (Jahr 1)</div>
         <button id="complete-month-btn">Monat abschliessen</button>
     </div>
-
+ 
+    <div id="question-board">
+        <div id="question-list"></div>
+    </div>
+ 
     <div id="scroll-indicator" class="hidden">Nach oben scrollen um deinen ganzen Reichtum zu entdecken</div>
+
 
     <div id="tutorial-overlay" class="tutorial-overlay" aria-hidden="false" aria-live="polite">
         <div class="tutorial-card">
@@ -267,15 +430,33 @@
         const taxPopupText = document.getElementById('tax-popup-text');
         const taxPopupButton = document.getElementById('tax-popup-button');
         const taxPopupTitle = document.getElementById('tax-popup-title');
-
+        const questionList = document.getElementById('question-list');
+ 
         const TOP_BAR_HEIGHT = 42;
         const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
         const tutorialMessages = {
             1: { icon: '📋', text: 'Platzhalter-Tutorial Jahr 1: Teste den Monats-Button, um Einkommen zu sammeln.' },
             2: { icon: '🏦', text: 'Platzhalter-Tutorial Jahr 2: Bleib dran bis Dezember, um das Erbe zu erleben.' }
         };
-
+ 
+        const examQuestions = [
+            { subject: 'Mathematik', content: 'Berechne die Fläche eines Rechtecks mit den Seiten 6 m und 4 m.', answer: 'A = 24 m²' },
+            { subject: 'Deutsch', content: 'Setze die passenden Kommas: "Wenn ich Zeit habe gehe ich mit dir ins Museum".', answer: 'Wenn ich Zeit habe, gehe ich mit dir ins Museum.' },
+            { subject: 'Biologie', content: 'Nenne zwei Unterschiede zwischen Tier- und Pflanzenzelle.', answer: 'Pflanzenzellen haben Zellwand und Chloroplasten, Tierzellen nicht.' },
+            { subject: 'Geschichte', content: 'Welches Ereignis löste 1789 die Französische Revolution aus?', answer: 'Der Sturm auf die Bastille am 14. Juli 1789.' },
+            { subject: 'Physik', content: 'Formuliere das zweite Newtonsche Gesetz.', answer: 'F = m · a (Kraft = Masse mal Beschleunigung).' },
+            { subject: 'Chemie', content: 'Welches Teilchen ist für die Säurewirkung verantwortlich?', answer: 'Das Oxonium-Ion (H₃O⁺).' },
+            { subject: 'Geografie', content: 'Warum entstanden viele Städte an Flüssen?', answer: 'Transport, Handel und Zugang zu Trinkwasser.' },
+            { subject: 'Informatik', content: 'Was beschreibt ein Algorithmus?', answer: 'Eine endliche Liste von Anweisungen zur Lösung eines Problems.' },
+            { subject: 'Musik', content: 'Welche Töne bilden einen C-Dur-Dreiklang?', answer: 'C, E und G.' },
+            { subject: 'Kunst', content: 'Was bedeutet Perspektive in der Zeichnung?', answer: 'Methoden, um räumliche Tiefe auf Fläche darzustellen.' },
+            { subject: 'Sport', content: 'Wie lange dauert eine Halbzeit im Fussball?', answer: '45 Minuten plus Nachspielzeit.' },
+            { subject: 'Französisch', content: 'Übersetze: "Wir fahren morgen nach Lausanne."', answer: 'Nous partons demain pour Lausanne.' }
+        ];
+ 
         let currentYear = 1;
+
         let currentMonthIndex = 0;
         let yearlyPeasEarned = 0;
         let currentMoney = 0;
@@ -339,8 +520,10 @@
         greenPeaPlacementIndex = 0;
         updateMonthLabel();
         syncTutorialOverlay();
-
+        initializeQuestions();
+ 
         function resetCanvasToViewport() {
+
             canvas.width = Math.min(800, window.innerWidth);
             canvas.height = window.innerHeight;
         }
@@ -439,7 +622,7 @@
             const startCol = marginCols;
             const endCol = gridCols - marginCols;
             const availableCols = Math.max(1, endCol - startCol);
-
+ 
             const greenPeas = settledPeas.filter(p => p.isGreen);
             greenPeas.forEach(pea => {
                 occupiedGrid.delete(getGridKey(pea.col, pea.row));
@@ -448,7 +631,7 @@
                 if (a.row !== b.row) return a.row - b.row;
                 return a.col - b.col;
             });
-
+ 
             greenPeas.forEach((pea, index) => {
                 const colOffset = index % availableCols;
                 const col = startCol + colOffset;
@@ -463,8 +646,107 @@
                 pea.targetRow = row;
             });
         }
+ 
+        function initializeQuestions() {
+            examQuestions.forEach((question, idx) => {
+                question.state = idx === 0 ? 'active' : 'future';
+                question.userEvaluation = null;
+            });
+            renderQuestions();
+        }
+ 
+        function updateQuestionStates() {
+            examQuestions.forEach((question, idx) => {
+                if (idx < currentMonthIndex) {
+                    question.state = 'done';
+                } else if (idx === currentMonthIndex) {
+                    question.state = 'active';
+                } else {
+                    question.state = 'future';
+                    question.userEvaluation = null;
+                }
+            });
+            renderQuestions();
+        }
+ 
+        function renderQuestions() {
+            if (!questionList) return;
+            questionList.innerHTML = '';
+            examQuestions.forEach((question, idx) => {
+                const card = document.createElement('div');
+                const state = question.state || 'future';
+                card.classList.add('question-card', `state-${state}`);
+                if (state !== 'active') {
+                    card.classList.add('compact');
+                }
+                if (state === 'done') {
+                    const evalClass = question.userEvaluation === 'correct' ? 'done-correct' : 'done-incorrect';
+                    card.classList.add(evalClass);
+                }
+                const icon = state === 'done'
+                    ? `<div class="question-icon ${question.userEvaluation === 'correct' ? 'correct' : 'incorrect'}">${question.userEvaluation === 'correct' ? '✔️' : '✖️'}</div>`
+                    : '';
+                const header = `
+                    <div class="question-head">
+                        <div class="question-month">${monthNames[idx]}</div>
+                        ${icon}
+                        <div class="question-subject">${question.subject}</div>
+                    </div>
+                `;
+                const body = state === 'active'
+                    ? `<div class="question-body">
+                            <p>${question.content}</p>
+                            <p class="question-answer">${question.answer}</p>
+                        </div>
+                        <div class="question-actions">
+                            <button class="decision-btn correct" data-choice="correct">Richtig</button>
+                            <button class="decision-btn incorrect" data-choice="incorrect">Falsch</button>
+                        </div>`
+                    : '';
+                card.innerHTML = header + body;
+                if (state === 'active') {
+                    const buttons = card.querySelectorAll('.decision-btn');
+                    buttons.forEach(btn => {
+                        btn.disabled = monthlyCompletionsLocked || heritageEventTriggered;
+                        btn.addEventListener('click', () => handleQuestionDecision(idx, btn.dataset.choice));
+                    });
+                }
+                // List of handwriting fonts
+                const handwritingFonts = [
+                    "'Patrick Hand'", 
+                    "'Caveat'", 
+                    "'Gloria Hallelujah'", 
+                    "'Shadows Into Light'",
+                    "'Indie Flower'",
+                    "'Reenie Beanie'",
+                    "'Just Another Hand'"
+                ];
 
+                // Apply random font to the answer text
+                if (state === 'active') {
+                    const answer = card.querySelector('.question-answer');
+                    if (answer) {
+                        const randomFont = handwritingFonts[Math.floor(Math.random() * handwritingFonts.length)];
+                        answer.style.fontFamily = randomFont + ", cursive";
+                    }
+                }
+
+                questionList.appendChild(card);
+            });
+        }
+ 
+        function handleQuestionDecision(questionIndex, decision) {
+            if (monthlyCompletionsLocked || heritageEventTriggered) return;
+            const question = examQuestions[questionIndex];
+            if (!question || question.state !== 'active') return;
+            question.userEvaluation = decision === 'correct' ? 'correct' : 'incorrect';
+            question.state = 'done';
+            renderQuestions();
+            handleMonthCompletion();
+        }
+ 
         function activateGreenPea(greenPea) {
+
             const columnsToCheck = [greenPea.col - 1, greenPea.col, greenPea.col + 1];
             const greenPeasToActivate = settledPeas.filter(p => p.isGreen && columnsToCheck.includes(p.col) && p.row >= greenPea.row);
             greenPeasToActivate.sort((a, b) => a.row - b.row);
@@ -680,9 +962,11 @@
         function lockMonthProgression(lock) {
             monthlyCompletionsLocked = lock;
             completeMonthBtn.disabled = lock || heritageEventTriggered;
+            renderQuestions();
         }
-
+ 
         function updateMonthLabel() {
+
             if (!monthLabel) return;
             if (currentMonthIndex < 12) {
                 monthLabel.textContent = `Monat: ${monthNames[currentMonthIndex]} (Jahr ${currentYear})`;
@@ -699,8 +983,10 @@
             yearlyPeasEarned += 4;
             currentMonthIndex++;
             updateMonthLabel();
-
+            updateQuestionStates();
+ 
             if (currentYear === 1 && currentMonthIndex >= 12) {
+
                 lockMonthProgression(true);
                 showTaxPopup();
             } else if (currentYear === 2 && currentMonthIndex >= 12 && !heritageEventTriggered) {
@@ -820,8 +1106,13 @@
                 currentYear = 2;
                 startTutorialPhase(2);
             }
+            examQuestions.forEach((question, idx) => {
+                question.userEvaluation = null;
+                question.state = idx === 0 ? 'active' : 'future';
+            });
             updateMonthLabel();
             lockMonthProgression(false);
+            renderQuestions();
             draw();
         }
 
@@ -924,29 +1215,9 @@
                 peas = stillActive;
             }
         }
-
-        function drawPlaceholderArea(greenAreaStart) {
-            const padding = 20;
-            const top = TOP_BAR_HEIGHT + padding;
-            const bottom = Math.max(top + 60, greenAreaStart - padding);
-            const height = bottom - top;
-            ctx.fillStyle = '#212121';
-            ctx.fillRect(padding, top, canvas.width - padding * 2, height);
-            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-            ctx.setLineDash([6, 6]);
-            ctx.strokeRect(padding + 8, top + 8, canvas.width - (padding + 8) * 2, height - 16);
-            ctx.setLineDash([]);
-            ctx.fillStyle = '#bdbdbd';
-            ctx.font = '18px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('Neuer Spiel-Loop Platzhalter', canvas.width / 2, top + height / 2 - 14);
-            ctx.fillStyle = '#757575';
-            ctx.font = '14px Arial';
-            ctx.fillText('Benutze den Button, um Monate zu testen', canvas.width / 2, top + height / 2 + 14);
-        }
-
+ 
         function draw() {
+
             ctx.fillStyle = '#2a2a2a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -979,9 +1250,9 @@
 
             const greenArea = getGreenPeaArea();
             const bgStartY = greenArea.bgStartRow * GRID_CELL_SIZE;
-            drawPlaceholderArea(bgStartY - 20);
-
+ 
             const bgEndY = greenArea.endRow * GRID_CELL_SIZE;
+
             const bgHeight = bgEndY - bgStartY;
             ctx.fillStyle = 'rgba(124, 179, 66, 0.15)';
             ctx.fillRect(0, bgStartY, canvas.width, bgHeight);
@@ -1165,9 +1436,10 @@
             const currentTime = performance.now();
             const deltaTime = currentTime - lastFrameTime;
             const shouldTick = !animationComplete && deltaTime >= FRAME_INTERVAL;
-            const needsPassiveDraw = erbsenNotification || showTutorial 
-
+            const needsPassiveDraw = erbsenNotification || showTutorial;
+ 
             if (shouldTick) {
+
                 // Keep any leftover ms so the drift stays small
                 lastFrameTime = currentTime - (deltaTime % FRAME_INTERVAL);
             }
