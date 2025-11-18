@@ -56,22 +56,27 @@
             position: fixed;
             top: 30px;
             left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
+            transform: translate(-50%, 0);
+            width: min(80vw, 460px);
+            background: rgba(0, 0, 0, 0.72);
             color: #FFD700;
-            padding: 16px 32px;
-            border-radius: 30px;
-            font-size: 16px;
+            padding: 14px;
+            border-radius: 16px;
+            font-size: clamp(14px, 4vw, 16px);
             font-weight: 500;
             z-index: 100;
             animation: fadeInBounce 1s ease-out;
             pointer-events: none;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
             backdrop-filter: blur(10px);
             text-align: center;
+            opacity: 1;
+            transition: opacity 0.45s ease, transform 0.45s ease;
+            will-change: opacity, transform;
         }
-        #scroll-indicator.hidden { 
-            display: none;
+        #scroll-indicator.hidden {
+            opacity: 0;
+            transform: translate(-50%, -24px);
         }
         @keyframes fadeInBounce {
             0% { 
@@ -85,6 +90,10 @@
                 opacity: 1;
                 transform: translateX(-50%) translateY(0);
             }
+        }
+
+        @media (max-width: 480px) {
+
         }
         #tax-popup {
             display: none;
@@ -367,8 +376,8 @@
 
 
     
-    <button id="restart-btn" style="display: none; opacity:0; transition:opacity 0.8s ease; position: fixed; bottom: 20px; left: 20px; z-index: 300; background: #1a1a1a; color: white; border: none; width: 110px; padding: 10px 20px; cursor: pointer; border-radius: 10px; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">Hauptmenü</button>
-    <button id="info-btn" style="display: none; opacity:0; transition:opacity 0.8s ease; position: fixed; bottom: 20px; right: 20px; z-index: 300; background: #1a1a1a; color: white; border: none; width: 110px; padding: 10px 20px; cursor: pointer; border-radius: 10px; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">Mehr Info</button>
+    <button id="restart-btn" style="visibility: hidden; opacity:0; transition:opacity 0.8s ease; position: fixed; bottom: 20px; left: 20px; z-index: 300; background: rgba(26, 26, 26, 0.6); color: white; border: none; width: 105px; padding: 10px; cursor: pointer; border-radius: 10px; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">Hauptmenü</button>
+    <button id="info-btn" style="visibility: hidden; opacity:0; transition:opacity 0.8s ease; position: fixed; bottom: 20px; right: 20px; z-index: 300; background: rgba(26, 26, 26, 0.6); color: white; border: none; width: 105px; padding: 10px; cursor: pointer; border-radius: 10px; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">Mehr Info</button>
 
 
     <script>
@@ -2583,8 +2592,8 @@
             spongeWiggleStartTime = 0;
             
             // Hide restart & info button
-            document.getElementById('restart-btn').style.display = 'none';
-            document.getElementById('info-btn').style.display = 'none';
+            document.getElementById('restart-btn').style.visibility = 'hidden';
+            document.getElementById('info-btn').style.visibility = 'hidden';
             
             document.body.style.overflow = 'hidden'; window.scrollTo({ top: 0, behavior: 'auto' }); scrollIndicator.classList.add('hidden'); 
             draw(); // Draw empty canvas
@@ -2616,13 +2625,27 @@
             if (!animationComplete) { scrollIndicator.classList.add('hidden'); return; }
             const scrollPosition = window.scrollY;
             const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            const restartBtn = document.getElementById("restart-btn");
+            const infoBtn    = document.getElementById("info-btn");
             // Hide if scrolled up more than 100px from bottom
             if (scrollPosition < maxScroll - 100) {
                 scrollIndicator.classList.add('hidden');
+                // make visible
+                restartBtn.style.visibility = "visible";
+                infoBtn.style.visibility = "visible";
+
+                // fade them in on next frame
+                requestAnimationFrame(() => {
+                    restartBtn.style.opacity = "1";
+                    infoBtn.style.opacity = "1";
+                });
+
+                resetButtonsShown = true;
             } else {
                 scrollIndicator.classList.remove('hidden');
             }
         }
+
         
         // Mouse/touch event handlers for sponge
         function getMousePos(e) {
@@ -2878,24 +2901,7 @@ canvas.addEventListener('touchcancel', () => {
 
         window.addEventListener('scroll', () => {
             updateScrollIndicator();
-
-            if (!allowResetButtonsReveal || resetButtonsShown) return;
-
-            const restartBtn = document.getElementById("restart-btn");
-            const infoBtn    = document.getElementById("info-btn");
-
-            // make visible
-            restartBtn.style.display = "block";
-            infoBtn.style.display = "block";
-
-            // fade them in on next frame
-            requestAnimationFrame(() => {
-                restartBtn.style.opacity = "1";
-                infoBtn.style.opacity = "1";
-            });
-
-            resetButtonsShown = true;
-        });
+        })
 
 
 
