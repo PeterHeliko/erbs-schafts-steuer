@@ -32,26 +32,6 @@
         #top-bar {
             display: none;
         }
-        #controls {
-            position: fixed;
-            top: 60px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 12px;
-            border-radius: 8px;
-            z-index: 120;
-            font-size: 12px;
-            color: #fff;
-            min-width: 180px;
-        }
-        #month-label {
-            font-weight: bold;
-            margin-bottom: 6px;
-            font-size: 13px;
-        }
-        #complete-month-btn {
-            display: none;
-        }
         #question-board {
             position: fixed;
             top: clamp(42px, 5vh, 72px);
@@ -472,11 +452,6 @@
         <div id="money-display">0.-</div>
     </div>
 
-    <div id="controls">
-        <div id="month-label"></div>
-        <button id="complete-month-btn"></button>
-    </div>
- 
     <div id="question-board">
         <div id="question-list"></div>
     </div>
@@ -509,8 +484,6 @@
         const tutorialOverlay = document.getElementById('tutorial-overlay');
         const tutorialText = document.getElementById('tutorial-text');
         const tutorialIcon = document.getElementById('tutorial-icon');
-        const monthLabel = document.getElementById('month-label');
-        const completeMonthBtn = document.getElementById('complete-month-btn');
         const restartBtn = document.getElementById('restart-btn');
         const infoBtn = document.getElementById('info-btn');
         const taxOverlay = document.getElementById('tax-overlay');
@@ -643,7 +616,6 @@
         gridRows = calcGridRows();
         initializeSpawnOrder();
         greenPeaPlacementIndex = 0;
-        updateMonthLabel();
         syncTutorialOverlay();
         initializeQuestions();
  
@@ -1265,19 +1237,9 @@
 
         function lockMonthProgression(lock) {
             monthlyCompletionsLocked = lock;
-            completeMonthBtn.disabled = lock || heritageEventTriggered;
             renderQuestions();
         }
  
-        function updateMonthLabel() {
-
-            if (!monthLabel) return;
-            if (currentMonthIndex < 12) {
-                monthLabel.textContent = `Monat: ${monthNames[currentMonthIndex]} (Jahr ${currentYear})`;
-            } else {
-                monthLabel.textContent = `Alle Monate in Jahr ${currentYear} abgeschlossen`;
-            }
-        }
 
         function handleMonthCompletion() {
             if (monthlyCompletionsLocked || heritageEventTriggered) return;
@@ -1286,7 +1248,6 @@
             addMonthlyGreenPeas();
             yearlyPeasEarned += 9;
             currentMonthIndex++;
-            updateMonthLabel();
             updateQuestionStates();
  
             if (currentYear === 1 && currentMonthIndex >= 12) {
@@ -1414,7 +1375,6 @@
                 question.userEvaluation = null;
                 question.state = idx === 0 ? 'active' : 'future';
             });
-            updateMonthLabel();
             lockMonthProgression(false);
             renderQuestions();
             draw();
@@ -1807,7 +1767,6 @@
         });
 
         taxPopupButton.addEventListener('click', handleTaxPopupButton);
-        completeMonthBtn.addEventListener('click', handleMonthCompletion);
         restartBtn.addEventListener('click', () => {
             window.location.href = 'index.html';
         });
