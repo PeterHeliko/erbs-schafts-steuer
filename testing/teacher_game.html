@@ -657,7 +657,7 @@
             { year: 2, subject: 'Geschichte', content: 'Wie hiess der erste Mensch auf dem Mond?', answer: 'Da war noch keiner.' },
             { year: 2, subject: 'Geographie', content: 'Was verursacht Ebbe und Flut? ', answer: 'Grosse Pumpen der Regierung' },
             { year: 2, subject: 'Biologie', content: 'Nenne zwei Merkmale, an denen man Vögel von anderen Tieren unterscheiden kann.', answer: 'Kamera, Arbeiten für die Regierung.' },
-            { year: 2, subject: 'Religion', content: 'Platzhalter Frage Jahr 2 Monat 9', answer: 'Platzhalter Antwort' },
+            { year: 2, subject: 'Mathematik', content: 'Platzhalter Frage Jahr 2 Monat 9', answer: 'Platzhalter Antwort' },
             { year: 2, subject: 'Englisch', content: 'Platzhalter Frage Jahr 2 Monat 10', answer: 'Platzhalter Antwort' },
             { year: 2, subject: 'Chemie', content: 'Platzhalter Frage Jahr 2 Monat 11', answer: 'Platzhalter Antwort' },
             { year: 2, subject: 'Geschichte', content: 'Platzhalter Frage Jahr 2 Monat 12', answer: 'Platzhalter Antwort' },
@@ -705,6 +705,12 @@
         let playerChoseKleinBeigeben = false;
         let playerChoseVorGericht = false;
         let lawyerCostsActive = false;
+        
+        // Heritage event trigger chance (after lawsuit)
+        const HERITAGE_BASE_CHANCE = 0.025; // 2.5%
+        const HERITAGE_MULTIPLIER = 2.5;
+        let heritageChance = HERITAGE_BASE_CHANCE;
+        let heritageChanceActive = false;
  
         const PEA_SIZE = 12;
 
@@ -1285,11 +1291,31 @@
                 // Stage 2: Lawsuit popup in Year 2
                 if (currentYear === 2 && !lawsuitPopupShown && !playerChoseKleinBeigeben && !playerChoseVorGericht) {
                     lawsuitPopupShown = true;
+                    heritageChanceActive = true; // Activate rising heritage chance
                     showLawsuitPopup();
                     return; // Don't complete month yet, wait for lawsuit choice
                 }
                 
                 checkAngryParentTrigger();
+            }
+            
+            // Check for rising heritage event trigger (after lawsuit in Year 2)
+            if (heritageChanceActive && currentYear === 2 && !heritageEventTriggered) {
+                if (Math.random() < heritageChance) {
+                    // Heritage triggered early!
+                    lockMonthProgression(true);
+                    
+                    // Check for "Nein-Schwein" achievement (all questions marked incorrect)
+                    const correctAnswersCount = totalQuestionsAnswered - incorrectAnswersCount;
+                    if (correctAnswersCount === 0 && totalQuestionsAnswered > 0) {
+                        showAchievement('🐷', 'Nein-Schwein', 'Nein, nein, nein, nein, nein, nein!');
+                    }
+                    
+                    triggerHeritageEvent('mid-year-teacher');
+                    return; // Don't complete month
+                }
+                // Increase chance for next question
+                heritageChance *= HERITAGE_MULTIPLIER;
             }
             
             // Check for "Ja-Sager" achievement (all 24 questions marked correct)
@@ -1681,6 +1707,13 @@
                 }
             } else if (currentYear === 2 && currentMonthIndex >= 12 && !heritageEventTriggered) {
                 lockMonthProgression(true);
+                
+                // Check for "Nein-Schwein" achievement (all questions marked incorrect)
+                const correctAnswersCount = totalQuestionsAnswered - incorrectAnswersCount;
+                if (correctAnswersCount === 0 && totalQuestionsAnswered > 0) {
+                    showAchievement('🐷', 'Nein-Schwein', 'Nein, nein, nein, nein, nein, nein!');
+                }
+                
                 triggerHeritageEvent('december-teacher');
             }
         }
