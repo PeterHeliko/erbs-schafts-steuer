@@ -382,6 +382,13 @@
         #tax-popup button.no-button:hover {
             background: #ae0c00;
         }
+        #tax-popup-button-2 {
+            margin-left: 10px;
+            background: #c62828;
+        }
+        #tax-popup-button-2:hover {
+            background: #8e0000;
+        }
         .tutorial-overlay {
             position: fixed;
             inset: 0;
@@ -558,6 +565,7 @@
         <h2 id="tax-popup-title">🏛️ Steueramt</h2>
         <p id="tax-popup-text"></p>
         <button id="tax-popup-button"></button>
+        <button id="tax-popup-button-2" style="display: none;"></button>
     </div>
 
     <button id="restart-btn">Hauptmenü</button>
@@ -585,6 +593,7 @@
         const taxPopup = document.getElementById('tax-popup');
         const taxPopupText = document.getElementById('tax-popup-text');
         const taxPopupButton = document.getElementById('tax-popup-button');
+        const taxPopupButton2 = document.getElementById('tax-popup-button-2');
         const taxPopupTitle = document.getElementById('tax-popup-title');
         const questionBoard = document.getElementById('question-board');
         const questionList = document.getElementById('question-list');
@@ -678,7 +687,7 @@
         let questionScrollAdvanceQueued = false;
         
         // Angry Parent mechanic
-        const angryEmojis = ['😡', '😠', '🤬', '👿', '😤', '😾'];
+        const angryEmojis = ['😡', '😠', '🤬', '😾', '👿', '😤'];
         let angryParentTriggered = false;
         let angryParentFirstPopupShown = false;
         let incorrectAnswersCount = 0;
@@ -687,6 +696,12 @@
         let lastMouseY = window.innerHeight / 2;
         let hasMarkedAnyIncorrect = false;
         let totalQuestionsAnswered = 0;
+        
+        // Stage 2: Lawsuit mechanic
+        let lawsuitPopupShown = false;
+        let playerChoseKleinBeigeben = false;
+        let playerChoseVorGericht = false;
+        let lawyerCostsActive = false;
  
         const PEA_SIZE = 12;
 
@@ -950,7 +965,8 @@
                 if (state === 'active') {
                     const buttons = card.querySelectorAll('.decision-btn');
                     buttons.forEach(btn => {
-                        btn.disabled = monthlyCompletionsLocked || heritageEventTriggered;
+                        const isIncorrectBtn = btn.dataset.choice === 'incorrect';
+                        btn.disabled = monthlyCompletionsLocked || heritageEventTriggered || (isIncorrectBtn && playerChoseKleinBeigeben);
                         const globalIdx = examQuestions.indexOf(question);
                         btn.addEventListener('click', () => handleQuestionDecision(globalIdx, btn.dataset.choice));
                     });
@@ -1105,6 +1121,27 @@
             taxPopup.classList.add('visible');
         }
 
+        function showLawsuitPopup() {
+            taxPopupStep = 'lawsuit';
+            taxPopupTitle.textContent = '😡 Verärgerte Eltern';
+            taxPopupText.textContent = 'Ein Elternteil macht Ernst und zieht dich vor Gericht. Wähle deine Reaktion:';
+            taxPopupButton.textContent = 'Klein beigeben';
+            taxPopupButton2.textContent = 'Vor Gericht ziehen';
+            taxPopupButton.classList.remove('no-button');
+            taxPopupButton2.style.display = 'inline-block';
+            taxOverlay.classList.add('visible');
+            taxPopup.classList.add('visible');
+        }
+
+        function showLawyerCostPopup() {
+            taxPopupStep = 'lawyerCost';
+            taxPopupTitle.textContent = '😡 Verärgerte Eltern';
+            taxPopupText.textContent = 'Du nimmst dir einen Anwalt. Die Kosten dafür werden dir direkt von deinem Konto abgezogen.';
+            taxPopupButton.textContent = 'OK';
+            taxPopupButton2.style.display = 'none';
+            taxPopupButton.classList.remove('no-button');
+        }
+
         function spawnAngryEmoji() {
             const emoji = angryEmojis[Math.floor(Math.random() * angryEmojis.length)];
             const emojiElement = document.createElement('div');
@@ -1241,6 +1278,14 @@
             if (decision === 'incorrect') {
                 incorrectAnswersCount++;
                 hasMarkedAnyIncorrect = true;
+                
+                // Stage 2: Lawsuit popup in Year 2
+                if (currentYear === 2 && !lawsuitPopupShown && !playerChoseKleinBeigeben && !playerChoseVorGericht) {
+                    lawsuitPopupShown = true;
+                    showLawsuitPopup();
+                    return; // Don't complete month yet, wait for lawsuit choice
+                }
+                
                 checkAngryParentTrigger();
             }
             
@@ -1592,6 +1637,21 @@
             currentMonthIndex++;
             updateQuestionStates();
             
+            // Charge lawyer costs if active (after monthly salary is paid)
+            if (lawyerCostsActive && currentYear === 2) {
+                setTimeout(() => {
+                    chargeLawyerCosts(() => {
+                        // Continue after lawyer costs are charged
+                        continueAfterMonthCompletion();
+                    });
+                }, 500); // Small delay after salary
+                return; // Don't continue immediately
+            }
+            
+            continueAfterMonthCompletion();
+        }
+
+        function continueAfterMonthCompletion() {
             // Force trigger angry parent at end of month 10 (currentMonthIndex becomes 11 after increment)
             // Only if player has marked any question as incorrect
             if (currentMonthIndex === 11 && !angryParentTriggered && hasMarkedAnyIncorrect) {
@@ -1755,7 +1815,21 @@
         function handleTaxPopupButton() {
             taxPopupButton.classList.remove('no-button');
 
-            if (taxPopupStep === 'angryParent') {
+            if (taxPopupStep === 'lawsuit') {
+                // Player chose "Klein beigeben"
+                playerChoseKleinBeigeben = true;
+                taxPopupButton2.style.display = 'none';
+                taxOverlay.classList.remove('visible');
+                taxPopup.classList.remove('visible');
+                taxPopupStep = 0;
+                renderQuestions(); // Re-render to disable "Falsch" button
+                handleMonthCompletion(); // Continue with month completion
+            } else if (taxPopupStep === 'lawyerCost') {
+                taxOverlay.classList.remove('visible');
+                taxPopup.classList.remove('visible');
+                taxPopupStep = 0;
+                handleMonthCompletion(); // Continue with month completion (no immediate charge)
+            } else if (taxPopupStep === 'angryParent') {
                 taxOverlay.classList.remove('visible');
                 taxPopup.classList.remove('visible');
                 taxPopupStep = 0;
@@ -1801,6 +1875,58 @@
                     prepareNextYear();
                 });
             }
+        }
+
+        function handleTaxPopupButton2() {
+            // Player chose "Vor Gericht ziehen"
+            playerChoseVorGericht = true;
+            lawyerCostsActive = true;
+            taxPopupButton2.style.display = 'none';
+            showLawyerCostPopup();
+        }
+
+        function chargeLawyerCosts(onComplete) {
+            const greenPeas = settledPeas.filter(p => p.isGreen);
+            if (greenPeas.length === 0) {
+                onComplete?.();
+                return;
+            }
+
+            greenPeas.sort((a, b) => {
+                if (a.row !== b.row) return a.row - b.row;
+                return a.col - b.col;
+            });
+
+            const peasToRemove = greenPeas.slice(0, Math.min(4, greenPeas.length));
+            const actualRemoveCount = peasToRemove.length;
+
+            peasToRemove.forEach(pea => {
+                pea.isBlinking = true;
+                pea.blinkStartTime = performance.now();
+            });
+
+            erbsenNotification = {
+                text: `Anwaltskosten`,
+                opacity: 1,
+                offsetY: 0,
+                startTime: performance.now(),
+                isNegative: true
+            };
+
+            setTimeout(() => {
+                peasToRemove.forEach(pea => {
+                    const index = settledPeas.indexOf(pea);
+                    if (index > -1) {
+                        settledPeas.splice(index, 1);
+                        occupiedGrid.delete(getGridKey(pea.col, pea.row));
+                    }
+                });
+                currentMoney -= actualRemoveCount * 1000;
+                repositionGreenPeas();
+                const remainingGreenPeas = settledPeas.filter(p => p.isGreen).length;
+                greenPeaPlacementIndex = remainingGreenPeas;
+                onComplete?.();
+            }, RED_BLINK_TIME);
         }
 
         function checkCascadeCompletion() {
@@ -2176,6 +2302,7 @@
         });
 
         taxPopupButton.addEventListener('click', handleTaxPopupButton);
+        taxPopupButton2.addEventListener('click', handleTaxPopupButton2);
         restartBtn.addEventListener('click', () => {
             window.location.href = 'index.html';
         });
