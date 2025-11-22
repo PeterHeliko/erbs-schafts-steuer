@@ -441,6 +441,14 @@
         }
         #restart-btn { left: calc(50% - 115px); }
         #info-btn { right: calc(50% - 115px); }
+        .angry-emoji {
+            position: fixed;
+            font-size: 40px;
+            z-index: 250;
+            pointer-events: none;
+            transition: none;
+            will-change: transform;
+        }
     </style>
 </head>
 <body>
@@ -581,6 +589,15 @@
         let showTutorial = true;
         let tutorialPhase = 1;
         let questionScrollAdvanceQueued = false;
+        
+        // Angry Parent mechanic
+        const angryEmojis = ['😡', '😠', '🤬', '💢', '👿', '😤'];
+        let angryParentTriggered = false;
+        let angryParentFirstPopupShown = false;
+        let incorrectAnswersCount = 0;
+        let activeAngryEmojis = [];
+        let lastMouseX = window.innerWidth / 2;
+        let lastMouseY = window.innerHeight / 2;
  
         const PEA_SIZE = 12;
 
@@ -934,6 +951,158 @@
         }
 
 
+        function checkAngryParentTrigger() {
+            // 50% chance to spawn emoji on each incorrect answer
+            const randomTrigger = Math.random() < 0.5;
+            
+            if (!randomTrigger) return;
+            
+            if (!angryParentTriggered) {
+                angryParentTriggered = true;
+                if (!angryParentFirstPopupShown) {
+                    showAngryParentPopup();
+                } else {
+                    spawnAngryEmoji();
+                }
+            } else {
+                // Already triggered before, spawn emoji with 50% chance
+                spawnAngryEmoji();
+            }
+        }
+
+        function showAngryParentPopup() {
+            angryParentFirstPopupShown = true;
+            taxPopupStep = 'angryParent';
+            taxPopupTitle.textContent = '😡 Verärgerte Eltern';
+            taxPopupText.textContent = 'Ein Elternteil ist mit einem Entscheid unzufrieden, droht dir mit dem Anwalt und schaut dir nun genau auf die Finger.';
+            taxPopupButton.textContent = 'OK';
+            taxPopupButton.classList.remove('no-button');
+            taxOverlay.classList.add('visible');
+            taxPopup.classList.add('visible');
+        }
+
+        function spawnAngryEmoji() {
+            const emoji = angryEmojis[Math.floor(Math.random() * angryEmojis.length)];
+            const emojiElement = document.createElement('div');
+            emojiElement.className = 'angry-emoji';
+            emojiElement.textContent = emoji;
+            
+            // Random spawn position at screen edges
+            const side = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
+            let startX, startY;
+            
+            if (side === 0) { // top
+                startX = Math.random() * window.innerWidth;
+                startY = -50;
+            } else if (side === 1) { // right
+                startX = window.innerWidth + 50;
+                startY = Math.random() * window.innerHeight;
+            } else if (side === 2) { // bottom
+                startX = Math.random() * window.innerWidth;
+                startY = window.innerHeight + 50;
+            } else { // left
+                startX = -50;
+                startY = Math.random() * window.innerHeight;
+            }
+            
+            emojiElement.style.left = startX + 'px';
+            emojiElement.style.top = startY + 'px';
+            
+            document.body.appendChild(emojiElement);
+            
+            const emojiObj = {
+                element: emojiElement,
+                x: startX,
+                y: startY,
+                baseSpeed: 0.3 + Math.random() * 0.4, // Slower: 0.3-0.7 pixels per frame
+                createdAt: performance.now(),
+                wobblePhase: Math.random() * Math.PI * 2,
+                wobbleSpeed: 2 + Math.random() * 2,
+                wobbleAmplitude: 5 + Math.random() * 8, // Weaker wobble: 5-13 pixels
+                orbitAngle: Math.random() * Math.PI * 2,
+                orbitSpeed: (0.5 + Math.random() * 1) * (Math.random() < 0.5 ? 1 : -1), // Random direction
+                orbitRadius: 40 + Math.random() * 60,
+                targetOrbitRadius: 40 + Math.random() * 60,
+                isHovering: false,
+                hoverTime: 0
+            };
+            
+            activeAngryEmojis.push(emojiObj);
+        }
+
+        function updateAngryEmojis() {
+            const now = performance.now();
+            const deltaTime = 1 / 60; // Approximate frame time
+            
+            activeAngryEmojis = activeAngryEmojis.filter(emojiObj => {
+                const dx = lastMouseX - emojiObj.x;
+                const dy = lastMouseY - emojiObj.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Remove only if too old (60 seconds)
+                if ((now - emojiObj.createdAt) > 60000) {
+                    emojiObj.element.remove();
+                    return false;
+                }
+                
+                // Switch to hovering mode when close to cursor
+                if (distance < emojiObj.orbitRadius * 2 && !emojiObj.isHovering) {
+                    emojiObj.isHovering = true;
+                    emojiObj.hoverTime = 0;
+                }
+                
+                // Calculate target position
+                let targetX, targetY;
+                
+                if (emojiObj.isHovering) {
+                    // Orbit around cursor
+                    emojiObj.hoverTime += deltaTime;
+                    emojiObj.orbitAngle += emojiObj.orbitSpeed * deltaTime;
+                    
+                    // Smoothly vary orbit radius for more natural movement
+                    const radiusVariation = Math.sin(emojiObj.hoverTime * 0.5) * 15;
+                    const currentRadius = emojiObj.targetOrbitRadius + radiusVariation;
+                    
+                    targetX = lastMouseX + Math.cos(emojiObj.orbitAngle) * currentRadius;
+                    targetY = lastMouseY + Math.sin(emojiObj.orbitAngle) * currentRadius;
+                } else {
+                    // Move towards cursor but offset by future orbit position
+                    const anticipatedAngle = Math.atan2(dy, dx) + Math.PI / 4;
+                    const anticipatedOffset = Math.min(distance * 0.3, emojiObj.targetOrbitRadius);
+                    
+                    targetX = lastMouseX + Math.cos(anticipatedAngle) * anticipatedOffset;
+                    targetY = lastMouseY + Math.sin(anticipatedAngle) * anticipatedOffset;
+                }
+                
+                // Calculate direction to target
+                const tdx = targetX - emojiObj.x;
+                const tdy = targetY - emojiObj.y;
+                const targetDist = Math.sqrt(tdx * tdx + tdy * tdy);
+                
+                if (targetDist > 1) {
+                    const angle = Math.atan2(tdy, tdx);
+                    const moveSpeed = emojiObj.isHovering ? emojiObj.baseSpeed * 1.2 : emojiObj.baseSpeed;
+                    
+                    // Move towards target
+                    emojiObj.x += Math.cos(angle) * moveSpeed;
+                    emojiObj.y += Math.sin(angle) * moveSpeed;
+                }
+                
+                // Update wobble phase
+                emojiObj.wobblePhase += emojiObj.wobbleSpeed * deltaTime;
+                
+                // Apply wobble perpendicular to movement direction
+                const wobbleOffset = Math.sin(emojiObj.wobblePhase) * emojiObj.wobbleAmplitude;
+                const angle = Math.atan2(tdy, tdx);
+                const perpX = -Math.sin(angle);
+                const perpY = Math.cos(angle);
+                
+                emojiObj.element.style.left = (emojiObj.x + perpX * wobbleOffset) + 'px';
+                emojiObj.element.style.top = (emojiObj.y + perpY * wobbleOffset) + 'px';
+                
+                return true;
+            });
+        }
  
         function handleQuestionDecision(questionIndex, decision) {
 
@@ -944,6 +1113,13 @@
             question.state = 'done';
             questionScrollAdvanceQueued = true;
             renderQuestions();
+            
+            // Angry Parent mechanic (Year 1 and Year 2)
+            if (decision === 'incorrect') {
+                incorrectAnswersCount++;
+                checkAngryParentTrigger();
+            }
+            
             handleMonthCompletion();
         }
 
@@ -1286,6 +1462,16 @@
             yearlyPeasEarned += 9;
             currentMonthIndex++;
             updateQuestionStates();
+            
+            // Force trigger angry parent at end of month 10 (currentMonthIndex becomes 11 after increment)
+            if (currentMonthIndex === 11 && !angryParentTriggered) {
+                angryParentTriggered = true;
+                if (!angryParentFirstPopupShown) {
+                    showAngryParentPopup();
+                } else {
+                    spawnAngryEmoji();
+                }
+            }
  
             if (currentYear === 1 && currentMonthIndex >= 12) {
 
@@ -1351,6 +1537,11 @@
         function triggerHeritageEvent() {
             if (heritageEventTriggered) return false;
             heritageEventTriggered = true;
+            
+            // Despawn all angry emojis when heritage is triggered
+            activeAngryEmojis.forEach(emojiObj => emojiObj.element.remove());
+            activeAngryEmojis = [];
+            
             setTimeout(() => {
                 showHeritagePopup();
             }, 500);
@@ -1407,6 +1598,9 @@
             if (currentYear === 1) {
                 currentYear = 2;
                 startTutorialPhase(2);
+                // Keep angry parent mechanic active for year 2
+                // States remain: angryParentTriggered, angryParentFirstPopupShown, incorrectAnswersCount
+                // Active emojis continue to hover
             }
             // Reset all questions and set states based on current year
             examQuestions.forEach((question) => {
@@ -1420,7 +1614,12 @@
         function handleTaxPopupButton() {
             taxPopupButton.classList.remove('no-button');
 
-            if (taxPopupStep === 100) {
+            if (taxPopupStep === 'angryParent') {
+                taxOverlay.classList.remove('visible');
+                taxPopup.classList.remove('visible');
+                taxPopupStep = 0;
+                spawnAngryEmoji();
+            } else if (taxPopupStep === 100) {
                 taxOverlay.classList.remove('visible');
                 taxPopup.classList.remove('visible');
                 taxPopupStep = 0;
@@ -1754,7 +1953,12 @@
                 lastDrawTime = currentTime;
                 updateSimulation();
                 draw();
-            } 
+            }
+            
+            // Always update angry emojis if any are active
+            if (activeAngryEmojis.length > 0) {
+                updateAngryEmojis();
+            }
 
             requestAnimationFrame(animate);
         }
@@ -1771,6 +1975,26 @@
             const b = menuButtonBounds;
             return x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height;
         }
+
+        // Track mouse position for angry emojis
+        document.addEventListener('mousemove', (e) => {
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+            }
+        });
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+            }
+        });
 
         canvas.addEventListener('mousemove', (e) => {
             const pos = getMousePos(e);
