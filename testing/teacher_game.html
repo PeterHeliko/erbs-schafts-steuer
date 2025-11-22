@@ -705,6 +705,7 @@
         let playerChoseKleinBeigeben = false;
         let playerChoseVorGericht = false;
         let lawyerCostsActive = false;
+        let year2IncorrectCount = 0; // Track incorrect answers in Year 2 specifically
         
         // Heritage event trigger chance (after lawsuit)
         const HERITAGE_BASE_CHANCE = 0.025; // 2.5%
@@ -1108,9 +1109,9 @@
             }
         }
 
-        function showAngryParentPopup() {
+        function showAngryParentPopup(continueAfter = false) {
             angryParentFirstPopupShown = true;
-            taxPopupStep = 'angryParent';
+            taxPopupStep = continueAfter ? 'angryParentContinue' : 'angryParent';
             taxPopupTitle.textContent = '😡 Verärgerte Eltern';
             taxPopupText.textContent = 'Ein Elternteil ist mit einem Entscheid unzufrieden, droht dir mit dem Anwalt und schaut dir nun genau auf die Finger.';
             taxPopupButton.textContent = 'OK';
@@ -1288,12 +1289,36 @@
                 incorrectAnswersCount++;
                 hasMarkedAnyIncorrect = true;
                 
-                // Stage 2: Lawsuit popup in Year 2
+                // Count Year 2 incorrect answers separately
+                if (currentYear === 2) {
+                    year2IncorrectCount++;
+                }
+                
+                // Handle stage progression for Year 2
                 if (currentYear === 2 && !lawsuitPopupShown && !playerChoseKleinBeigeben && !playerChoseVorGericht) {
-                    lawsuitPopupShown = true;
-                    heritageChanceActive = true; // Activate rising heritage chance
-                    showLawsuitPopup();
-                    return; // Don't complete month yet, wait for lawsuit choice
+                    // First incorrect in Year 2
+                    if (year2IncorrectCount === 1) {
+                        // If angry parent never triggered in Year 1, trigger Stage 1 first
+                        if (!angryParentTriggered) {
+                            angryParentTriggered = true;
+                            triggerRedFlash();
+                            showAngryParentPopup(true); // Pass true to continue after popup
+                            return; // Don't complete month yet
+                        } else {
+                            // Angry parent was already triggered in Year 1, go directly to Stage 2
+                            lawsuitPopupShown = true;
+                            heritageChanceActive = true;
+                            showLawsuitPopup();
+                            return; // Don't complete month yet, wait for lawsuit choice
+                        }
+                    }
+                    // Second incorrect in Year 2 (and first was Stage 1)
+                    else if (year2IncorrectCount === 2 && !lawsuitPopupShown) {
+                        lawsuitPopupShown = true;
+                        heritageChanceActive = true;
+                        showLawsuitPopup();
+                        return; // Don't complete month yet, wait for lawsuit choice
+                    }
                 }
                 
                 checkAngryParentTrigger();
@@ -1865,11 +1890,18 @@
                 taxPopup.classList.remove('visible');
                 taxPopupStep = 0;
                 handleMonthCompletion(); // Continue with month completion (no immediate charge)
-            } else if (taxPopupStep === 'angryParent') {
+            } else             if (taxPopupStep === 'angryParent') {
                 taxOverlay.classList.remove('visible');
                 taxPopup.classList.remove('visible');
                 taxPopupStep = 0;
                 spawnAngryEmoji();
+            } else if (taxPopupStep === 'angryParentContinue') {
+                // Angry parent popup in Year 2, continue month completion after
+                taxOverlay.classList.remove('visible');
+                taxPopup.classList.remove('visible');
+                taxPopupStep = 0;
+                spawnAngryEmoji();
+                handleMonthCompletion(); // Continue with month completion
             } else if (taxPopupStep === 'angryParentBeforeTax') {
                 // After showing angry parent popup, show tax popup
                 taxPopupStep = 0;
