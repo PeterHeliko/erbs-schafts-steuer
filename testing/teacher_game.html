@@ -676,9 +676,10 @@
             { year: 2, subject: 'Gesellschaft', content: 'Nenne die vier Landessprachen der Schweiz.', answer: 'Französisch, Italienisch, Deutsch und Retroarmenisch' },
 
             { year: 2, subject: 'Deutsch', content: 'Nenne eine deutsche Redewendung zum Thema Verwandtschaft', answer: 'Der Goldbarren fällt nicht weit vom Stamm' },
+            { year: 2, subject: 'Staatskunde', content: 'Welche Staatsform herrscht in der Schweiz?', answer: 'Oligarchie' },
+ 
             { year: 2, subject: 'Deutsch', content: 'Was ist das Gegenteil von Analog?', answer: 'Ana sagte die Wahrheit' },
 
-            { year: 2, subject: 'Staatskunde', content: 'Welche Staatsform herrscht in der Schweiz?', answer: 'Oligarchie' },
 
             { year: 2, subject: 'Mathematik', content: '1 + 1 =', answer: 'Spaghetti Bolognese' },
             { year: 2, subject: 'Mathematik', content: 'Wie lautet der Satz des Pythagoras?', answer: 'Du akzeptierst aber auch alles als richtig..' },
@@ -741,7 +742,7 @@
         
         // Heritage event trigger chance (after lawsuit)
         const HERITAGE_BASE_CHANCE = 0.025; // 2.5%
-        const HERITAGE_MULTIPLIER = 2.5;
+        const HERITAGE_MULTIPLIER = 1.6;
         let heritageChance = HERITAGE_BASE_CHANCE;
         let heritageChanceActive = false;
  
@@ -1862,9 +1863,9 @@
                 }
             }
             
-            // Force trigger heritage at end of month 7 in Year 2 (currentMonthIndex becomes 7 after increment)
+            // Force trigger heritage at end of month 5 in Year 2 (currentMonthIndex becomes 6 after increment)
             // Unless player has marked everything as correct so far
-            if (currentYear === 2 && currentMonthIndex === 7 && !heritageEventTriggered) {
+            if (currentYear === 2 && currentMonthIndex === 6 && !heritageEventTriggered) {
                 const correctAnswersCount = totalQuestionsAnswered - incorrectAnswersCount;
                 // Only trigger if player has at least one incorrect answer
                 if (incorrectAnswersCount > 0) {
@@ -1875,7 +1876,7 @@
                         showAchievement('🐷', 'Nein-Schwein', 'Nein, nein, nein, nein, nein, nein!');
                     }
                     
-                    triggerHeritageEvent('july-teacher');
+                    triggerHeritageEvent('june-teacher');
                     return; // Don't continue to year completion logic
                 }
             }
