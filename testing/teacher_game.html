@@ -935,8 +935,23 @@
         }
 
         function initializeQuestions() {
+            // List of handwriting fonts
+            const handwritingFonts = [
+                'Patrick Hand', 
+                'Caveat', 
+                'Gloria Hallelujah', 
+                'Shadows Into Light',
+                'Indie Flower',
+                'Reenie Beanie',
+                'Kalam'
+            ];
+            
             examQuestions.forEach((question) => {
                 question.userEvaluation = null;
+                // Assign a random font to each question (only once, at initialization)
+                if (!question.answerFont) {
+                    question.answerFont = handwritingFonts[Math.floor(Math.random() * handwritingFonts.length)];
+                }
             });
             updateQuestionStates();
         }
@@ -1019,25 +1034,14 @@
                         renderQuestionSheet(sheetEl, question.sheetMusic);
                     }
                 }
-                // List of handwriting fonts
-                const handwritingFonts = [
-                    'Patrick Hand', 
-                    'Caveat', 
-                    'Gloria Hallelujah', 
-                    'Shadows Into Light',
-                    'Indie Flower',
-                    'Reenie Beanie',
-                    'Kalam'
-                ];
 
-                // Apply random font to the answer text
+                // Apply the pre-assigned font to the answer text (consistent across re-renders)
                 if (state === 'active') {
                     const answer = card.querySelector('.question-answer');
-                    if (answer) {
-                        const randomFont = handwritingFonts[Math.floor(Math.random() * handwritingFonts.length)];
-                        answer.style.fontFamily = `'${randomFont}', cursive`;
+                    if (answer && question.answerFont) {
+                        answer.style.fontFamily = `'${question.answerFont}', cursive`;
                         // Apply font-specific size from configuration
-                        answer.style.fontSize = (fontSizeConfig[randomFont] || 20) + 'px';
+                        answer.style.fontSize = (fontSizeConfig[question.answerFont] || 20) + 'px';
                     }
                 }
 
