@@ -401,6 +401,7 @@
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.3s ease;
+            visibility: hidden;
         }
         .tutorial-overlay.dimmed {
             pointer-events: auto;
@@ -417,6 +418,7 @@
         }
         .tutorial-overlay.visible {
             opacity: 1;
+            visibility: visible;
         }
         .tutorial-overlay.visible.dimmed::before {
             opacity: 1;
@@ -1918,12 +1920,20 @@
             tutorialOverlay.classList.toggle('visible', showTutorial);
             tutorialOverlay.classList.toggle('dimmed', showTutorial && tutorialDimmed);
             tutorialOverlay.setAttribute('aria-hidden', String(!showTutorial));
+            // Ensure the overlay doesn't block touch events when hidden
+            if (!showTutorial) {
+                tutorialOverlay.style.pointerEvents = 'none';
+            }
         }
 
         function dismissTutorial() {
             if (!showTutorial) return;
             showTutorial = false;
             tutorialDimmed = false;
+            // Immediately remove pointer events to prevent blocking
+            if (tutorialOverlay) {
+                tutorialOverlay.style.pointerEvents = 'none';
+            }
             syncTutorialOverlay();
             // Re-render questions to re-enable buttons
             renderQuestions();
