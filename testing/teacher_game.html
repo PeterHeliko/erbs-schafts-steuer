@@ -76,6 +76,13 @@
         }
         #question-board.question-board--cascade {
             opacity: 0;
+            pointer-events: none !important;
+        }
+        #question-board.question-board--cascade #question-list {
+            pointer-events: none !important;
+        }
+        #question-board.question-board--hidden {
+            display: none;
         }
         #question-list {
             pointer-events: auto;
@@ -1974,6 +1981,10 @@
             taxPopupButton.classList.add('no-button');
             taxOverlay.classList.add('visible');
             taxPopup.classList.add('visible');
+            // Hide question board completely to allow scrolling
+            if (questionBoard) {
+                questionBoard.classList.add('question-board--hidden');
+            }
         }
 
         function triggerHeritageEvent() {
