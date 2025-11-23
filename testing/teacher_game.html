@@ -1854,13 +1854,13 @@
         function dismissTutorial() {
             if (!showTutorial) return;
             showTutorial = false;
+            tutorialDimmed = false;
             syncTutorialOverlay();
         }
         
-        function clearTutorialDim() {
-            if (tutorialDimmed) {
-                tutorialDimmed = false;
-                syncTutorialOverlay();
+        function dismissTutorialOnInteraction() {
+            if (showTutorial && tutorialDimmed) {
+                dismissTutorial();
             }
         }
 
@@ -2445,9 +2445,9 @@
             }
         });
         
-        // Clear tutorial dimming on any click or touch
-        document.addEventListener('click', clearTutorialDim, { once: false });
-        document.addEventListener('touchstart', clearTutorialDim, { once: false });
+        // Dismiss tutorial on any click or touch
+        document.addEventListener('click', dismissTutorialOnInteraction, { once: false });
+        document.addEventListener('touchstart', dismissTutorialOnInteraction, { once: false });
 
         canvas.addEventListener('mousemove', (e) => {
             const pos = getMousePos(e);
