@@ -402,6 +402,10 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
+        .tutorial-overlay.dimmed {
+            pointer-events: auto;
+            cursor: pointer;
+        }
         .tutorial-overlay::before {
             content: '';
             position: fixed;
@@ -1000,7 +1004,7 @@
                     const buttons = card.querySelectorAll('.decision-btn');
                     buttons.forEach(btn => {
                         const isIncorrectBtn = btn.dataset.choice === 'incorrect';
-                        btn.disabled = monthlyCompletionsLocked || heritageEventTriggered || (isIncorrectBtn && playerChoseKleinBeigeben);
+                        btn.disabled = monthlyCompletionsLocked || heritageEventTriggered || (isIncorrectBtn && playerChoseKleinBeigeben) || (showTutorial && tutorialDimmed);
                         const globalIdx = examQuestions.indexOf(question);
                         btn.addEventListener('click', () => handleQuestionDecision(globalIdx, btn.dataset.choice));
                     });
@@ -1908,12 +1912,8 @@
             showTutorial = false;
             tutorialDimmed = false;
             syncTutorialOverlay();
-        }
-        
-        function dismissTutorialOnInteraction() {
-            if (showTutorial && tutorialDimmed) {
-                dismissTutorial();
-            }
+            // Re-render questions to re-enable buttons
+            renderQuestions();
         }
 
         function startTutorialPhase(phase) {
@@ -2497,9 +2497,18 @@
             }
         });
         
-        // Dismiss tutorial on any click or touch
-        document.addEventListener('click', dismissTutorialOnInteraction, { once: false });
-        document.addEventListener('touchstart', dismissTutorialOnInteraction, { once: false });
+        // Tutorial overlay click handler
+        tutorialOverlay.addEventListener('click', (e) => {
+            if (showTutorial && tutorialDimmed) {
+                dismissTutorial();
+            }
+        });
+        
+        tutorialOverlay.addEventListener('touchstart', (e) => {
+            if (showTutorial && tutorialDimmed) {
+                dismissTutorial();
+            }
+        });
 
         canvas.addEventListener('mousemove', (e) => {
             const pos = getMousePos(e);
